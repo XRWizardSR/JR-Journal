@@ -58,7 +58,7 @@ jr_journal_workflow = SequentialAgent(
 )
 
 # --- 4. Root Agent (The Entry Point) ---
-agent = Agent(
+root_agent = Agent(
     name="jr_journal_greeter",
     model=model_name,
     description="The main entry point for the JR Journal Assistant.",
