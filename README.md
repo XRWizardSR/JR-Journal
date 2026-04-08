@@ -30,10 +30,12 @@ Built using the Google Agent Development Kit (ADK), JR Journal utilizes a "Chief
 We have automated the environment initialization and Cloud Run deployment to ensure a reproducible build process.
 
 1. **Initialize the Environment:**
-   ```bash
-   source tools/init.sh
-   ```
+   `source tools/init.sh`
+
 2. **Deploy to Google Cloud Run:**
-   ```bash
-   ./tools/deploy.sh
-   ```
+   `./tools/deploy.sh`
+
+## 🏗 Architecture Notes & MCP Compatibility (Phase 2)
+To deliver a secure, database-backed MVP within the 24-hour hackathon constraint, we proved the core multi-agent logic, data extraction, and secure VPC database persistence using native ADK tools. 
+
+Our architecture is designed to decouple these tools into a standalone **Model Context Protocol (MCP)** server (`mcp_server.py`) and connect to our custom "Clinical Ethereal" frontend (`/ui`) in Phase 2, ensuring enterprise scalability while fulfilling all hackathon MCP requirements.
