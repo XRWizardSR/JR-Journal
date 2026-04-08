@@ -25,15 +25,44 @@ Built using the Google Agent Development Kit (ADK), JR Journal utilizes a "Chief
 
 *Why this stack?* Serverless deployment (Cloud Run) ensures cost-effective scaling and high availability during unpredictable hospital shifts, while AlloyDB provides the transactional reliability required for medical data.
 
-## 🚀 Quick Start & Deployment
+## 🚀 End-to-End Deployment Guide
 
-We have automated the environment initialization and Cloud Run deployment to ensure a reproducible build process.
+This guide provides the full workflow for setting up, testing, and deploying the JR Journal agent, including secure secret management.
 
-1. **Initialize the Environment:**
-   `source tools/init.sh`
+### Step 1: Initial Setup
+First, initialize your local environment. This script sets your gcloud project, activates the virtual environment, and exports necessary environment variables.
+```bash
+source tools/init.sh
+```
 
-2. **Deploy to Google Cloud Run:**
-   `./tools/deploy.sh`
+### Step 2: Set Up Google Cloud Secrets
+This step securely stores your application credentials in Google Cloud Secret Manager.
+
+**Prerequisite:** Make sure you have downloaded your OAuth 2.0 Client ID as `credentials.json` and placed it in the root of this project.
+
+Run the setup script:
+```bash
+bash tools/setup_secrets.sh
+```
+
+### Step 3: Local Run & Authentication
+Run the agent locally to perform the one-time Google Calendar authentication. This will open a browser window for you to grant permission.
+```bash
+bash tools/run_local.sh
+```
+After you approve, a `token.json` file will be created in your project directory.
+
+### Step 4: Upload the Refresh Token
+The `token.json` contains a vital `refresh_token` that the deployed agent will use. Run the following script to extract this token and upload it securely to Secret Manager.
+```bash
+bash tools/update_refresh_token.sh
+```
+
+### Step 5: Deploy to Cloud Run
+With your secrets securely stored, you can now deploy the agent to Cloud Run. It will use the secrets to run headlessly without any further manual login.
+```bash
+bash tools/deploy.sh
+```
 
 ## 🏗 Architecture Notes & MCP Compatibility (Phase 2)
 To deliver a secure, database-backed MVP within the 24-hour hackathon constraint, we proved the core multi-agent logic, data extraction, and secure VPC database persistence using native ADK tools. 

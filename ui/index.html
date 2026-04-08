@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Voice Log - JR Journal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#f8f9fa",
+                    "inverse-primary": "#99cbff",
+                    "on-secondary-fixed-variant": "#005048",
+                    "on-tertiary-container": "#f1f9ff",
+                    "on-tertiary-fixed-variant": "#354a53",
+                    "tertiary-fixed-dim": "#b4cad6",
+                    "secondary-container": "#8df5e4",
+                    "secondary-fixed": "#8df5e4",
+                    "error": "#ba1a1a",
+                    "surface-container-high": "#e7e8e9",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-fixed": "#00201c",
+                    "on-surface": "#191c1d",
+                    "error-container": "#ffdad6",
+                    "on-secondary-container": "#007165",
+                    "on-surface-variant": "#404751",
+                    "primary-fixed": "#cfe5ff",
+                    "surface-variant": "#e1e3e4",
+                    "secondary-fixed-dim": "#70d8c8",
+                    "surface-dim": "#d9dadb",
+                    "primary-fixed-dim": "#99cbff",
+                    "on-tertiary-fixed": "#071e27",
+                    "primary": "#005e96",
+                    "tertiary": "#475d67",
+                    "on-primary-container": "#f7f9ff",
+                    "surface-tint": "#00629e",
+                    "on-secondary": "#ffffff",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-primary": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "on-background": "#191c1d",
+                    "surface-container-low": "#f3f4f5",
+                    "background": "#f8f9fa",
+                    "on-primary-fixed": "#001d34",
+                    "inverse-surface": "#2e3132",
+                    "on-error": "#ffffff",
+                    "inverse-on-surface": "#f0f1f2",
+                    "surface-container": "#edeeef",
+                    "primary-container": "#0277bd",
+                    "secondary": "#006b5f",
+                    "surface": "#f8f9fa",
+                    "tertiary-fixed": "#cfe6f2",
+                    "tertiary-container": "#607580",
+                    "on-primary-fixed-variant": "#004a78",
+                    "outline-variant": "#c0c7d2",
+                    "outline": "#707882"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {},
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .waveform-bar {
+            width: 4px;
+            border-radius: 4px;
+            background: #0277bd;
+            transition: height 0.3s ease;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-slate-50/80 backdrop-blur-md shadow-[0px_12px_32px_rgba(25,28,29,0.06)]">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-sky-700" data-icon="clinical_notes">clinical_notes</span>
+<h1 class="text-sky-900 font-['Manrope'] font-extrabold tracking-tight text-lg">JR Journal</h1>
+</div>
+<div class="flex items-center gap-2 active:scale-95 duration-200 cursor-pointer">
+<img alt="Doctor's profile avatar" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="Close-up portrait of a professional male doctor in a white lab coat with a stethoscope around his neck, clinical setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPf5A5VMWsy-_Chm1e_ugEoBVfIYbGHvassqxXs9Z6qproG4ZLGN8K7TaMrhAXmscbSAsLsbOC1Bbo0qS5gfvApjqa9-Qcf4YN_BD3xJA4aSh7F2cMGFgSQjtapHGss_vuACNWGkII9ZJIEvEBtpRFW-PClhN-x1i0Po5HMqrVWF7XauREJQBSRy6S9Prg7nTz41QYxmflKYgnSx2ZaOFho3UwGFdOBd7I1jm1aKpSpuq637LB1vFbRvehr3YV34YWbPvAcsdEnvI"/>
+</div>
+</header>
+<div class="flex min-h-screen pt-16 pb-24 lg:pb-0">
+<!-- NavigationDrawer (Desktop) -->
+<aside class="hidden lg:flex flex-col h-screen w-72 bg-slate-50 p-4 gap-2 fixed left-0 border-r-0 rounded-r-3xl shadow-xl">
+<div class="flex flex-col items-start px-4 py-8 mb-4">
+<div class="flex items-center gap-4 mb-4">
+<img alt="Dr. Profile" class="w-12 h-12 rounded-2xl object-cover" data-alt="Professional doctor avatar profile picture with soft lighting and medical environment background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAm8f3ID1j9y-aUrAASm7s0XGv2zLk2cBEpKDGC0WdFj19ZZzMhuoXl_PjQaePSDcF4FwCHPtTVR4lPjFyfFuOic9zPJIzJlEPd9L2K7F0_Mb8ZSIYFgBSgVtaGezygIih3XR9ZzC9yiHYt20wslPt4LVK0jEdfj3qHMTTaYUw5BoDPaUzT7OAFpiQ3wKubRJy_DHnvYg7Z0RFDyUAkrzdTYUbQ-80Eao9gC7CUYuMRpjb4a63KFe31JieIEr92H-F-tgxEc2C-EuM"/>
+<div>
+<p class="text-sky-900 font-['Manrope'] font-bold">Dr. Resident</p>
+<p class="text-slate-500 text-xs">Medical Officer</p>
+</div>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 transition-all rounded-xl font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 transition-all rounded-xl font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span>Duty Rosters</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-sky-100/50 text-sky-800 rounded-xl font-semibold shadow-sm" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span>Logbooks</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 transition-all rounded-xl font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 transition-all rounded-xl font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content (Voice Logging Interface) -->
+<main class="flex-1 lg:ml-72 flex flex-col items-center justify-center p-6 bg-surface">
+<div class="max-w-2xl w-full flex flex-col items-center gap-12">
+<!-- Voice Waveform Animation Section -->
+<div class="w-full flex flex-col items-center">
+<div class="h-32 flex items-center justify-center gap-1 mb-8">
+<div class="waveform-bar h-12"></div>
+<div class="waveform-bar h-20"></div>
+<div class="waveform-bar h-32"></div>
+<div class="waveform-bar h-24"></div>
+<div class="waveform-bar h-16"></div>
+<div class="waveform-bar h-28"></div>
+<div class="waveform-bar h-32"></div>
+<div class="waveform-bar h-20"></div>
+<div class="waveform-bar h-12"></div>
+<div class="waveform-bar h-16"></div>
+<div class="waveform-bar h-24"></div>
+<div class="waveform-bar h-20"></div>
+<div class="waveform-bar h-12"></div>
+</div>
+<button class="group flex flex-col items-center gap-4 transition-transform active:scale-95">
+<div class="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center shadow-[0_0_40px_rgba(0,94,150,0.3)] hover:shadow-[0_0_60px_rgba(0,94,150,0.5)] transition-all relative">
+<div class="absolute inset-0 rounded-full bg-primary animate-ping opacity-20"></div>
+<span class="material-symbols-outlined text-white text-4xl" data-icon="stop">stop</span>
+</div>
+<span class="text-on-surface-variant font-headline font-bold tracking-tight">Stop Recording</span>
+</button>
+<p class="text-primary text-sm font-medium mt-4 tracking-wide">00:42 / LIVE</p>
+</div>
+<!-- Transcription Canvas -->
+<div class="w-full bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0px_12px_32px_rgba(25,28,29,0.06)] border border-outline-variant/15 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4">
+<span class="inline-flex items-center gap-2 px-3 py-1 bg-secondary-container/30 text-on-secondary-container rounded-full text-xs font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+                            Transcribing
+                        </span>
+</div>
+<label class="block text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-4">Draft Log Entry</label>
+<div class="min-h-[120px] text-on-surface text-lg leading-relaxed font-body">
+                        "Tested 750 blood samples today and completed <span class="bg-primary-fixed text-on-primary-fixed px-1 rounded">HIC rounds</span>."
+                    </div>
+<!-- Action Buttons -->
+<div class="mt-8 flex gap-3">
+<button class="flex-1 h-14 flex items-center justify-center gap-2 text-primary font-bold bg-surface-bright border border-outline-variant/20 rounded-xl hover:bg-surface-container-low transition-colors active:scale-[0.98]">
+<span class="material-symbols-outlined text-xl" data-icon="edit">edit</span>
+                            Edit
+                        </button>
+<button class="flex-[2] h-14 flex items-center justify-center gap-2 bg-gradient-to-br from-primary to-primary-container text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-xl" data-icon="check_circle">check_circle</span>
+                            Confirm &amp; Log
+                        </button>
+</div>
+</div>
+<!-- Tip Card -->
+<div class="w-full bg-tertiary-container/10 p-4 rounded-2xl flex gap-4 items-center border border-tertiary-container/10">
+<span class="material-symbols-outlined text-tertiary" data-icon="lightbulb">lightbulb</span>
+<p class="text-on-surface-variant text-xs leading-snug">
+<span class="font-bold text-tertiary">Quick Tip:</span> You can mention medication names and dosages; our clinical AI will automatically categorize them for you.
+                    </p>
+</div>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 lg:hidden bg-white/80 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.03)] rounded-t-[2rem]">
+<a class="flex flex-col items-center justify-center text-slate-400 p-2" href="#">
+<span class="material-symbols-outlined" data-icon="home_health">home_health</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-wide">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-sky-600 text-white rounded-2xl p-2 mb-1 shadow-lg shadow-sky-200/50" href="#">
+<span class="material-symbols-outlined" data-icon="mic_none" style="font-variation-settings: 'FILL' 1;">mic_none</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-wide">Logs</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 p-2" href="#">
+<span class="material-symbols-outlined" data-icon="event_available">event_available</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-wide">Schedules</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 p-2" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-wide">Profile</span>
+</a>
+</nav>
+</body></html>

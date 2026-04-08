@@ -12,4 +12,4 @@ adk deploy cloud_run \
   --allow-unauthenticated \
   --network=default \
   --vpc-egress=private-ranges-only \
-  --set-env-vars="DB_USER=postgres,DB_PASS=AishuRajesh,DB_HOST=10.80.128.2,DB_NAME=jr_journal_db"
+  --set-env-vars="DB_USER=postgres,DB_PASS=AishuRajesh,DB_HOST=10.80.128.2,DB_NAME=jr_journal_db,PROJECT_ID=$PROJECT_ID"

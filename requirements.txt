@@ -5,3 +5,6 @@ wikipedia==1.4.0
 python-dotenv
 sqlalchemy
 pg8000
+google-api-python-client
+google-auth-oauthlib
+google-cloud-secret-manager

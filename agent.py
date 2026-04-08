@@ -1,13 +1,22 @@
 import os
+import json
 import logging
 import google.cloud.logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 from google.adk import Agent
 from google.adk.agents import SequentialAgent
 from google.adk.tools.tool_context import ToolContext
 from sqlalchemy import create_engine, text
+
+# --- Google API Imports ---
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from google.cloud import secretmanager
 
 # --- Setup ---
 cloud_logging_client = google.cloud.logging.Client()
@@ -21,6 +30,52 @@ DB_PASS = os.getenv("DB_PASS")
 DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
 engine = create_engine(f"postgresql+pg8000://{DB_USER}:{DB_PASS}@{DB_HOST}:5432/{DB_NAME}")
+
+# --- Google Calendar Auth ---
+SCOPES = ["https://www.googleapis.com/auth/calendar.events"]
+
+def get_calendar_service():
+    """Gets an authorized Google Calendar service object, handling both local and Cloud Run environments."""
+    creds = None
+    
+    # Check if running in Cloud Run
+    if "K_SERVICE" in os.environ:
+        project_id = os.getenv("PROJECT_ID")
+        sm_client = secretmanager.SecretManagerServiceClient()
+        
+        # Get credentials from Secret Manager
+        cred_secret_name = f"projects/{project_id}/secrets/google-credentials-json/versions/latest"
+        cred_response = sm_client.access_secret_version(request={"name": cred_secret_name})
+        cred_info = json.loads(cred_response.payload.data.decode("UTF-8"))
+
+        # Get refresh token from Secret Manager
+        token_secret_name = f"projects/{project_id}/secrets/google-refresh-token/versions/latest"
+        token_response = sm_client.access_secret_version(request={"name": token_secret_name})
+        refresh_token = token_response.payload.data.decode("UTF-8")
+        
+        creds = Credentials(
+            None, # No access token initially
+            refresh_token=refresh_token,
+            token_uri=cred_info['installed']['token_uri'],
+            client_id=cred_info['installed']['client_id'],
+            client_secret=cred_info['installed']['client_secret'],
+            scopes=SCOPES
+        )
+        creds.refresh(Request())
+    else:
+        # Local development flow
+        if os.path.exists("token.json"):
+            creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+                creds = flow.run_local_server(port=0)
+            with open("token.json", "w") as token:
+                token.write(creds.to_json())
+
+    return build("calendar", "v3", credentials=creds)
 
 # --- Tools ---
 def add_entry_to_state(tool_context: ToolContext, doctor_input: str) -> dict[str, str]:
@@ -59,7 +114,25 @@ def retrieve_from_database(target_date: str) -> str:
 
 def sync_to_google_calendar(shift_date: str, shift_type: str, location: str) -> str:
     """Syncs a duty roster to the Google Calendar."""
-    return f"SUCCESS: '{shift_type}' at '{location}' scheduled for {shift_date}."
+    try:
+        service = get_calendar_service()
+        
+        start_time = datetime.fromisoformat(shift_date)
+        end_time = start_time + timedelta(days=1)
+
+        event = {
+            'summary': shift_type,
+            'location': location,
+            'start': { 'date': start_time.strftime('%Y-%m-%d'), 'timeZone': 'Asia/Kolkata' },
+            'end': { 'date': end_time.strftime('%Y-%m-%d'), 'timeZone': 'Asia/Kolkata' },
+        }
+
+        event = service.events().insert(calendarId='primary', body=event).execute()
+        return f"SUCCESS: Event created: {event.get('htmlLink')}"
+    except HttpError as error:
+        return f"ERROR: Could not create calendar event: {error}"
+    except Exception as e:
+        return f"ERROR: An unexpected error occurred: {e}"
 
 # --- 1. Clinical Researcher Agent ---
 clinical_researcher = Agent(
