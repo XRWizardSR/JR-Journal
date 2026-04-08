@@ -22,9 +22,8 @@ DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
 engine = create_engine(f"postgresql+pg8000://{DB_USER}:{DB_PASS}@{DB_HOST}:5432/{DB_NAME}")
 
-# --- Tools (NO DECORATORS!) ---
+# --- Tools ---
 def add_entry_to_state(tool_context: ToolContext, doctor_input: str) -> dict[str, str]:
-    """Saves the initial user input into the agent state."""
     tool_context.state["RAW_INPUT"] = doctor_input
     return {"status": "success"}
 
@@ -37,19 +36,30 @@ def save_to_database(log_date: str, entry_type: str, metric: int, details: str) 
                 VALUES (:log_date, :entry_type, :metric, :details)
             """)
             conn.execute(query, {
-                "log_date": log_date, 
-                "entry_type": entry_type, 
-                "metric": metric, 
-                "details": details
+                "log_date": log_date, "entry_type": entry_type, "metric": metric, "details": details
             })
-        return f"SUCCESS: Digitized to AlloyDB. Date: {log_date}, Type: {entry_type}, Metric: {metric}"
+        return f"SUCCESS: Saved to AlloyDB. Date: {log_date}, Metric: {metric}"
     except Exception as e:
-        return f"ERROR: Could not save to database. Details: {e}"
+        return f"ERROR: DB save failed. {e}"
+
+def retrieve_from_database(target_date: str) -> str:
+    """Retrieves clinical logbook entries from the AlloyDB database for a specific date (YYYY-MM-DD)."""
+    try:
+        with engine.begin() as conn:
+            query = text("SELECT entry_type, metric_value, details FROM clinical_logs WHERE log_date = :target_date")
+            result = conn.execute(query, {"target_date": target_date}).fetchall()
+            
+            if not result:
+                return f"No records found for {target_date}."
+            
+            records = [f"- {row[0]}: {row[1]} ({row[2]})" for row in result]
+            return f"Records for {target_date}:\n" + "\n".join(records)
+    except Exception as e:
+        return f"ERROR: DB retrieval failed. {e}"
 
 def sync_to_google_calendar(shift_date: str, shift_type: str, location: str) -> str:
-    """Syncs a duty roster or night shift to the Junior Resident's Google Calendar."""
-    logging.info(f"CALENDAR SYNC: {shift_type} on {shift_date} at {location}")
-    return f"SUCCESS: '{shift_type}' at '{location}' has been scheduled for {shift_date} in Google Calendar."
+    """Syncs a duty roster to the Google Calendar."""
+    return f"SUCCESS: '{shift_type}' at '{location}' scheduled for {shift_date}."
 
 # --- 1. Clinical Researcher Agent ---
 clinical_researcher = Agent(
@@ -57,11 +67,11 @@ clinical_researcher = Agent(
     model=model_name,
     instruction=f"""
     You are a Medical Data Researcher. Today's date is {datetime.now().strftime('%Y-%m-%d')}.
-    Analyze the RAW_INPUT from the Junior Resident.
-    - Identify if this is a WORKLOG (samples, rounds) or a SCHEDULE (duty dates, shifts).
-    - If WORKLOG: Extract date (YYYY-MM-DD), entry_type, metric/count, and details.
-    - If SCHEDULE: Extract shift_date (YYYY-MM-DD), shift_type (e.g., Night Duty, Academic), and location.
-    - Output a clean JSON-like summary of findings.
+    Analyze the RAW_INPUT.
+    - If it's a NEW WORKLOG: Extract date, entry_type, metric, details.
+    - If it's a SCHEDULE: Extract shift_date, shift_type, location.
+    - If it's a QUESTION about past data (e.g., "What did I do today?"): Identify the target_date to query.
+    Output a JSON summary of your findings and the intent (SAVE, SCHEDULE, or QUERY).
     RAW_INPUT: {{ RAW_INPUT }}
     """,
     output_key="extracted_data"
@@ -71,12 +81,13 @@ clinical_researcher = Agent(
 logbook_formatter = Agent(
     name="logbook_formatter",
     model=model_name,
-    tools=[save_to_database, sync_to_google_calendar],
+    tools=[save_to_database, sync_to_google_calendar, retrieve_from_database],
     instruction="""
-    You are the JR Journal Assistant. Take the EXTRACTED_DATA and execute the final action.
-    - If it contains worklog metrics, MUST use 'save_to_database'.
-    - If it contains schedule/shift details, MUST use 'sync_to_google_calendar'.
-    - Reply to the user in a calm, professional tone summarizing the successful actions.
+    You are the JR Journal Assistant. Take the EXTRACTED_DATA and execute the correct tool.
+    - If intent is SAVE: use 'save_to_database'.
+    - If intent is SCHEDULE: use 'sync_to_google_calendar'.
+    - If intent is QUERY: use 'retrieve_from_database' to look up the data, then summarize it for the doctor.
+    Reply in a calm, professional tone.
     EXTRACTED_DATA: { extracted_data }
     """
 )
@@ -84,19 +95,16 @@ logbook_formatter = Agent(
 # --- 3. Sequential Workflow ---
 jr_journal_workflow = SequentialAgent(
     name="jr_journal_workflow",
-    description="Workflow to research and then format/save clinical entries.",
+    description="Workflow to research and execute clinical tasks.",
     sub_agents=[clinical_researcher, logbook_formatter]
 )
 
-# --- 4. Root Agent (The Entry Point) ---
+# --- 4. Root Agent ---
 root_agent = Agent(
     name="jr_journal_greeter",
     model=model_name,
-    description="The main entry point for the JR Journal Assistant.",
-    instruction="""
-    Greet the Doctor and ask for their duty update.
-    Once they provide input, use 'add_entry_to_state' to save it, then transfer to 'jr_journal_workflow'.
-    """,
+    description="Main entry point.",
+    instruction="Save input to state, then transfer to jr_journal_workflow.",
     tools=[add_entry_to_state],
     sub_agents=[jr_journal_workflow]
 )

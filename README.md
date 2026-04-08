@@ -24,3 +24,16 @@ Built using the Google Agent Development Kit (ADK), JR Journal utilizes a "Chief
 * **Infrastructure:** Google Cloud Run (Serverless Container API)
 
 *Why this stack?* Serverless deployment (Cloud Run) ensures cost-effective scaling and high availability during unpredictable hospital shifts, while AlloyDB provides the transactional reliability required for medical data.
+
+## 🚀 Quick Start & Deployment
+
+We have automated the environment initialization and Cloud Run deployment to ensure a reproducible build process.
+
+1. **Initialize the Environment:**
+   ```bash
+   source tools/init.sh
+   ```
+2. **Deploy to Google Cloud Run:**
+   ```bash
+   ./tools/deploy.sh
+   ```
