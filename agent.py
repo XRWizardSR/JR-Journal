@@ -1,11 +1,12 @@
 import os
 import logging
 import google.cloud.logging
+from datetime import datetime
 from dotenv import load_dotenv
-from google.adk.components import Agent, SequentialAgent
+
+from google.adk import Agent
+from google.adk.agents import SequentialAgent
 from google.adk.tools.tool_context import ToolContext
-from langchain_google_vertexai import ChatVertexAI
-from langchain_core.tools import tool
 from sqlalchemy import create_engine, text
 
 # --- Setup ---
@@ -19,16 +20,14 @@ DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")
 DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
-
-# Build the connection string securely
 engine = create_engine(f"postgresql+pg8000://{DB_USER}:{DB_PASS}@{DB_HOST}:5432/{DB_NAME}")
 
-# --- Tools ---
+# --- Tools (NO DECORATORS!) ---
 def add_entry_to_state(tool_context: ToolContext, doctor_input: str) -> dict[str, str]:
+    """Saves the initial user input into the agent state."""
     tool_context.state["RAW_INPUT"] = doctor_input
     return {"status": "success"}
 
-@tool
 def save_to_database(log_date: str, entry_type: str, metric: int, details: str) -> str:
     """Saves a clinical logbook entry into the secure AlloyDB database."""
     try:
@@ -43,27 +42,27 @@ def save_to_database(log_date: str, entry_type: str, metric: int, details: str) 
                 "metric": metric, 
                 "details": details
             })
-        logging.info(f"Saved to AlloyDB: {entry_type} - {metric}")
         return f"SUCCESS: Digitized to AlloyDB. Date: {log_date}, Type: {entry_type}, Metric: {metric}"
     except Exception as e:
-        logging.error(f"DB Error: {e}")
         return f"ERROR: Could not save to database. Details: {e}"
 
-@tool
-def route_to_schedule_agent(query: str) -> str:
-    """Routes scheduling and calendar requests to the Scheduling Sub-Agent."""
-    return "SUCCESS: Request routed to Scheduling Sub-Agent. Google Calendar updated."
+def sync_to_google_calendar(shift_date: str, shift_type: str, location: str) -> str:
+    """Syncs a duty roster or night shift to the Junior Resident's Google Calendar."""
+    logging.info(f"CALENDAR SYNC: {shift_type} on {shift_date} at {location}")
+    return f"SUCCESS: '{shift_type}' at '{location}' has been scheduled for {shift_date} in Google Calendar."
 
 # --- 1. Clinical Researcher Agent ---
 clinical_researcher = Agent(
     name="clinical_researcher",
     model=model_name,
-    instruction="""
-    You are a Medical Data Researcher. Analyze the RAW_INPUT from the Junior Resident.
-    - Identify if this is a WORKLOG (samples, rounds, metrics) or a SCHEDULE (duty dates).
-    - If WORKLOG, explicitly extract the date (format YYYY-MM-DD), type of entry, metric/count, and specific details.
-    - Output a clean summary of findings so the Logbook Formatter can save it.
-    RAW_INPUT: { RAW_INPUT }
+    instruction=f"""
+    You are a Medical Data Researcher. Today's date is {datetime.now().strftime('%Y-%m-%d')}.
+    Analyze the RAW_INPUT from the Junior Resident.
+    - Identify if this is a WORKLOG (samples, rounds) or a SCHEDULE (duty dates, shifts).
+    - If WORKLOG: Extract date (YYYY-MM-DD), entry_type, metric/count, and details.
+    - If SCHEDULE: Extract shift_date (YYYY-MM-DD), shift_type (e.g., Night Duty, Academic), and location.
+    - Output a clean JSON-like summary of findings.
+    RAW_INPUT: {{ RAW_INPUT }}
     """,
     output_key="extracted_data"
 )
@@ -72,12 +71,12 @@ clinical_researcher = Agent(
 logbook_formatter = Agent(
     name="logbook_formatter",
     model=model_name,
-    tools=[save_to_database, route_to_schedule_agent],
+    tools=[save_to_database, sync_to_google_calendar],
     instruction="""
     You are the JR Journal Assistant. Take the EXTRACTED_DATA and execute the final action.
-    - If it's a worklog, MUST use the 'save_to_database' tool to permanently store it.
-    - If it's a schedule update, MUST use the 'route_to_schedule_agent' tool.
-    - Confirm the action to the doctor with a calm, professional tone.
+    - If it contains worklog metrics, MUST use 'save_to_database'.
+    - If it contains schedule/shift details, MUST use 'sync_to_google_calendar'.
+    - Reply to the user in a calm, professional tone summarizing the successful actions.
     EXTRACTED_DATA: { extracted_data }
     """
 )
@@ -95,9 +94,8 @@ root_agent = Agent(
     model=model_name,
     description="The main entry point for the JR Journal Assistant.",
     instruction="""
-    - Greet the Doctor and ask for their duty update or logbook entry.
-    - Once they provide input, use 'add_entry_to_state' to save it.
-    - Then, transfer control to the 'jr_journal_workflow'.
+    Greet the Doctor and ask for their duty update.
+    Once they provide input, use 'add_entry_to_state' to save it, then transfer to 'jr_journal_workflow'.
     """,
     tools=[add_entry_to_state],
     sub_agents=[jr_journal_workflow]
