@@ -1,24 +1,26 @@
-# 🩺 JR Journal: The Digital Sanctuary for AIIMS Residents
+# 🩺 JR Journal: Digital Sanctuary for Medical Residents
 
-**JR Journal** is a sophisticated multi-agent AI system built for the **GenAI Academy APAC Hackathon 2026**. It transforms the high-friction administrative overhead of Junior Residents (JRs) into a seamless, digital experience.
+**JR Journal** is an AI-powered, multi-agent productivity assistant built for the **GenAI Academy APAC Hackathon 2026**. It is specifically designed to eliminate administrative burnout for medical Junior Residents (JRs), with an initial focus on MD Microbiology workflows.
 
 ## 🚀 The Clinical Problem
-In high-intensity environments like **MD Microbiology**, residents are buried under manual logs. Tracking thousands of blood samples or HIC rounds while managing 24-hour duty rosters leads to burnout and data entry errors.
+Medical residents suffer from severe administrative burnout. During grueling 24-hour shifts, they are forced to manually track complex, overlapping schedules (Night shifts, Weekend duties, Academic rosters) and maintain physical logbooks of hundreds of daily clinical procedures (e.g., logging sample testing volumes, HIC rounds). 
 
-## 🧠 Multi-Agent Orchestration & Workflow
-Unlike a basic chatbot, **JR Journal** utilizes a **Sequential Workflow** to ensure data integrity and professional formatting:
+## 💡 Our Solution & USP
+**Unique Selling Proposition (USP): "Voice-to-Logbook Integration."**
+A doctor can simply dictate their daily metrics or schedule updates in natural language after a long shift (e.g., *"I tested 750 blood samples today and have night duty tomorrow"*). The multi-agent system autonomously categorizes, structures, and logs the data into secure databases and calendars without a single manual form entry.
 
-* **Greeter (Primary Agent):** The central entry point that captures the doctor's unstructured input and manages the global state.
-* **Clinical Researcher (Sub-Agent 1):** Extracts structured metrics (sample counts, duty types, dates) from natural language.
-* **Response Formatter (Sub-Agent 2):** Synthesizes the data into a professional confirmation and prepares the logs for the database.
+## 🧠 Multi-Agent Orchestration (How it Works)
+Built using the Google Agent Development Kit (ADK), JR Journal utilizes a "Chief Resident" primary agent that orchestrates specialized sub-agents:
 
-## 🛠 Tech Stack & Infrastructure
-* **Orchestration:** Google Agent Development Kit (ADK) `v1.14.0`.
-* **Brain:** Gemini 2.5 Flash via **Vertex AI** (authenticated via IAM Service Accounts).
-* **Deployment:** Google **Cloud Run** with an auto-generated **ADK UI**.
-* **Tools:** Custom Python tools for **AlloyDB** (Clinical Logs) and Google Calendar (Rosters).
+1. **Chief Resident Agent (Primary):** Analyzes intent, extracts key data, and coordinates sub-agents.
+2. **Logbook Agent (Sub-Agent):** Structures clinical data (e.g., "750 samples tested") and securely persists it to Google AlloyDB via MCP.
+3. **Scheduling Agent (Sub-Agent):** Identifies date/duty types and syncs events to Google Calendar via MCP.
 
-## 📦 Local Setup & Deployment
-1.  **Environment:** `uv venv && source .venv/bin/activate`.
-2.  **Identity:** Managed via a dedicated `jr-journal-service` account with `aiplatform.user` permissions.
-3.  **Deploy:** `uvx --from google-adk adk deploy cloud_run --with_ui`.
+## 🛠 Tech Stack
+* **Framework:** Google Agent Development Kit (ADK)
+* **Brain:** Vertex AI (Gemini Models)
+* **Integration:** Model Context Protocol (MCP) Tool Connectors
+* **Database:** Google AlloyDB for PostgreSQL (Structured Clinical Logs)
+* **Infrastructure:** Google Cloud Run (Serverless Container API)
+
+*Why this stack?* Serverless deployment (Cloud Run) ensures cost-effective scaling and high availability during unpredictable hospital shifts, while AlloyDB provides the transactional reliability required for medical data.
